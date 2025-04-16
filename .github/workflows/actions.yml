@@ -1,0 +1,21 @@
+name: Python CI
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12.2'
+    - name: Install dependencies
+      run: pip install -r requirements.txt
+    - name: Run Typechecking
+      run: pytype .
+    - name: Check formating with pycodestyle
+      run: pycodestyle --exclude '.git,.venv,venv,test_*.py' --ignore E121,E123,E126,E226,E24,E501,E704,W503,W504,W391,W292 .
+
