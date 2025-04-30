@@ -1,7 +1,7 @@
 import time
 from interfaces import Strategy, Board, Token, IllegalMove
 
-MAX_TIME = 5.0
+MAX_TIME = 1.0
 
 class MinimaxBotV2(Strategy):
     def authors(self):

@@ -3,6 +3,8 @@ from interfaces import Board, Token, IllegalMove
 from random_strategy import RandomStrategy
 from minimax_bot import MinimaxBot
 from minimax_bot_V2 import MinimaxBotV2
+from BOT_FINAL import Kelawin
+
 
 CELL_SIZE = 80
 PADDING = 10
@@ -19,7 +21,7 @@ class Connect4GUI:
         self.canvas.bind("<Button-1>", self.click_handler)
         self.token_player = Token.RED
         self.token_bot = Token.YELLOW
-        self.bot = MinimaxBotV2()
+        self.bot = Kelawin()
         self.draw_board()
 
     def draw_board(self):
