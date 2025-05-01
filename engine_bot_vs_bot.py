@@ -1,16 +1,15 @@
 import tkinter as tk
 from interfaces import Board, Token, IllegalMove
-from random_strategy import RandomStrategy
 from minimax_bot import MinimaxBot
-from minimax_bot_V2 import MinimaxBotV2
 from BOT_FINAL import Kelawin
-from bot_du_gars_adapte import MyStrategy
+from copy import deepcopy
 
 
 CELL_SIZE = 80
 PADDING = 10
+DELAY = 500  # délai en ms entre les coups
 
-class Connect4GUI:
+class Connect4BotVsBotGUI:
     def __init__(self, root, height=6, width=7, to_win=4):
         self.root = root
         self.board = Board(height, width, to_win)
@@ -19,11 +18,13 @@ class Connect4GUI:
         self.to_win = to_win
         self.canvas = tk.Canvas(root, width=width * CELL_SIZE, height=height * CELL_SIZE, bg="blue")
         self.canvas.pack()
-        self.canvas.bind("<Button-1>", self.click_handler)
-        self.token_player = Token.RED
-        self.token_bot = Token.YELLOW
-        self.bot = MyStrategy()
+        self.token_bot1 = Token.RED
+        self.token_bot2 = Token.YELLOW
+        self.bot1 = MinimaxBot()
+        self.bot2 = Kelawin()
+        self.current_token = self.token_bot1
         self.draw_board()
+        self.root.after(DELAY, self.play_turn)
 
     def draw_board(self):
         self.canvas.delete("all")
@@ -41,27 +42,33 @@ class Connect4GUI:
                 }[token]
                 self.canvas.create_oval(x0, y0, x1, y1, fill=color)
 
-    def click_handler(self, event):
-        col = event.x // CELL_SIZE
-        try:
-            self.board.play(col, self.token_player)
-        except IllegalMove:
-            return
-        self.draw_board()
-        if self.check_winner(self.token_player):
-            self.end_game("Tu as gagné 🎉 !")
-            return
-        self.root.after(500, self.bot_move)
+    def play_turn(self):
+        if self.current_token == self.token_bot1:
+            bot = self.bot1
+        else:
+            bot = self.bot2
 
-    def bot_move(self):
         try:
-            col = self.bot.play(self.board, self.token_bot)
-            self.board.play(col, self.token_bot)
-            self.draw_board()
-            if self.check_winner(self.token_bot):
-                self.end_game("Le bot a gagné 🤖 !")
+            col = bot.play(deepcopy(self.board), self.current_token)
+
+            self.board.play(col, self.current_token)
         except IllegalMove:
+            self.end_game("Coup illégal joué. Match nul.")
+            return
+
+        self.draw_board()
+
+        if self.check_winner(self.current_token):
+            gagnant = "Bot 1 (Rouge)" if self.current_token == self.token_bot1 else "Bot 2 (Jaune)"
+            self.end_game(f"{gagnant} a gagné 🎉 !")
+            return
+
+        if all(self.board.box(0, c) != Token.EMPTY for c in range(self.width)):
             self.end_game("Match nul !")
+            return
+
+        self.current_token = self.token_bot2 if self.current_token == self.token_bot1 else self.token_bot1
+        self.root.after(DELAY, self.play_turn)
 
     def check_winner(self, token: Token) -> bool:
         def has_consecutive(sequence):
@@ -87,13 +94,12 @@ class Connect4GUI:
         return False
 
     def end_game(self, message):
-        self.canvas.unbind("<Button-1>")
         self.canvas.create_text(self.canvas.winfo_width() // 2,
                                 self.canvas.winfo_height() // 2,
                                 text=message, font=("Helvetica", 32), fill="white")
 
 if __name__ == "__main__":
     root = tk.Tk()
-    root.title("Puissance 4 - VS Bot")
-    game = Connect4GUI(root)
+    root.title("Puissance 4 - Bot vs Bot")
+    game = Connect4BotVsBotGUI(root)
     root.mainloop()

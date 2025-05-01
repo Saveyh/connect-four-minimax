@@ -10,11 +10,11 @@ class Kelawin(Strategy):
         self.opponent_token = Token.RED if your_token == Token.YELLOW else Token.YELLOW
 
         for col in self.coup_legal(current_board):
-            if self.coup_gagnant(current_board, self.opponent_token, col):
+            if self.coup_gagnant(current_board, self.token, col):
                 return col
 
         for col in self.coup_legal(current_board):
-            if self.coup_gagnant(current_board, self.token, col):
+            if self.coup_gagnant(current_board, self.opponent_token, col):
                 return col
 
         best_col, _ = self.minimax(current_board, profondeur=6, alpha=float('-inf'), beta=float('inf'), max_p=True)
@@ -123,13 +123,14 @@ class Kelawin(Strategy):
         if profondeur == 0 or self.fin_partie(board):
             return None, self.score_position(board, self.token) if max_p else self.score_position(board,
                                                                                                   self.opponent_token)
+
         coups_legaux = self.coup_legal(board)
 
         if max_p:
             max_eval = -float('inf')
             best_col = coups_legaux[0]
             for col in coups_legaux:
-                copie_board = copy.deepcopy(board)
+                copie_board = copy.deepcopy(board)  # Copie du plateau juste avant de jouer un coup
                 copie_board.play(col, self.token)
                 _, eval = self.minimax(copie_board, profondeur - 1, alpha, beta, False)
                 if eval > max_eval:
@@ -143,7 +144,7 @@ class Kelawin(Strategy):
             min_eval = float('inf')
             best_col = coups_legaux[0]
             for col in coups_legaux:
-                copie_board = copy.deepcopy(board)
+                copie_board = copy.deepcopy(board)  # Copie du plateau juste avant de jouer un coup
                 copie_board.play(col, self.opponent_token)
                 _, eval = self.minimax(copie_board, profondeur - 1, alpha, beta, True)
                 if eval < min_eval:
