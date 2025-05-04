@@ -1,5 +1,5 @@
 from interfaces import Strategy, Token, Board, IllegalMove
-import copy
+from copy import deepcopy
 
 class Kelawin(Strategy):
     def authors(self) -> str:
@@ -14,9 +14,13 @@ class Kelawin(Strategy):
 
     def col_libres(self, board:Board):
 
+        #fonction pour check les coups légaux restants
+
+        #on crée la liste vide
+        coups = []
+
         #Parcourt chaque colonne et regarde si la dernière case est vide.
         for i in range(board.width - 1):
-            coups = []
             col = board.column(i)
             #si oui, il l'ajoute à la liste
             if col[0] == Token.EMPTY:
@@ -27,19 +31,11 @@ class Kelawin(Strategy):
 
     def simulation(self, board:Board, col:int, token:Token):
 
-        # cette fonction sert à "simuler" un coup, pour voir ses conséquences
-        # pour cela, elle crée une "copie parfaite" du tableau actuel
+        # cette fonction sert à simuler un coup, pour voir ses conséquences
+        # pour cela, on crée une "copie profonde" du tableau actuel
+        new_board = deepcopy(board)
 
-        #tout d'abord, on crée un nouveau tableau de jeu vide, avec les mêmes variables
-        new_board = Board(board.height, board.width, board.to_win)
-
-        #on regarde chaque pion et rejouons le meme dans le nouveau tab.
-        for i in board.column():
-            for j in board.line():
-                pion = board.box(i,j)
-                new_board.play(i,pion)
-
-        #puis on ajoute le coup simulé dans ce nouveau tableau
+        #puis, on ajoute le coup simulé dans ce nouveau tableau
         new_board.play(col, token)
 
         #on retourne la copie
@@ -70,7 +66,7 @@ class Kelawin(Strategy):
 
         #on check toutes les colonnes
         for i in range(board.width-1):
-            col = board.line(i)
+            col = board.column(i)
             if self.suite_gagnante(col, token, board.to_win):
                 return True
 
@@ -78,6 +74,8 @@ class Kelawin(Strategy):
         for diag in board.diagonals():
             if self.suite_gagnante(diag, token, board.to_win):
                 return True
+
+        return False
 
     def fin(self, board:Board):
 
@@ -88,7 +86,7 @@ class Kelawin(Strategy):
             return True
 
         # ou s'il y a une égalité
-        if self.col_libres(board) == 0:
+        if len(self.col_libres(board)) == 0:
             return True
 
         # sinon, la partie n'est pas finie
