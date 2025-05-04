@@ -112,7 +112,7 @@ class Kelawin(Strategy):
             for coup in self.col_libres(board):
 
                 #et on le simule
-                new_board = self.simulation(board, coup, token)
+                self.simulation(board, coup, token)
 
 
         #si c'est à l'adversaire
@@ -127,7 +127,7 @@ class Kelawin(Strategy):
             # on récupère chaque coup possible
             for coup in self.col_libres(board):
                 # et on le simule
-                new_board = self.simulation(board, coup, token)
+                self.simulation(board, coup, token)
 
 
 
