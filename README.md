@@ -1,14 +1,8 @@
 # Connect Four Minimax
 ![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)
-![Tests](https://img.shields.io/badge/Tests-unittest-0F172A?logo=python&logoColor=white)
-![CI](https://img.shields.io/badge/CI-GitHub%20Actions-2088FF?logo=githubactions&logoColor=white)
-![Style](https://img.shields.io/badge/Style-pycodestyle-3A7BFA?logo=python&logoColor=white)
-![Typing](https://img.shields.io/badge/Typing-pytype-5C2D91?logo=google&logoColor=white)
 ![Tkinter](https://img.shields.io/badge/UI-Tkinter-FFCC00?logo=python&logoColor=black)
 ![Game](https://img.shields.io/badge/Game-Connect%20Four-D7263D)
 ![AI](https://img.shields.io/badge/AI-Minimax-1F6FEB)
-![Status](https://img.shields.io/badge/Status-Active%20Project-2EA44F)
-![Repo](https://img.shields.io/badge/Package-src%20layout-4B8BBE?logo=python&logoColor=white)
 
 Connect Four project built around a reusable game engine, several bot strategies, and lightweight Tkinter interfaces for local play and bot-vs-bot demos.
 
