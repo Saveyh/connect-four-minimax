@@ -1,17 +1,31 @@
-# Connect Four Bots
+# Connect Four Minimax
 
-Cleaned-up public version of a Connect Four project built around a reusable game engine, several bot strategies, and simple Tkinter interfaces.
+Connect Four project built around a reusable game engine, several bot strategies, and lightweight Tkinter interfaces for local play and bot-vs-bot demos.
 
-## What is in this repository
+## Highlights
 
-- `src/connect4/core.py`: the board model, token definitions, and shared game helpers.
-- `src/connect4/bots/`: the playable bot strategies.
-- `src/connect4/ui/`: Tkinter interfaces for human-vs-bot and bot-vs-bot matches.
-- `scripts/`: small entry points for running the project locally.
-- `archive/experiments/`: older drafts and prototypes kept for reference, separated from the production code.
-- `tests/`: basic regression tests for the core game logic.
+- Reusable board engine with isolated game rules in `src/connect4/core.py`
+- Multiple bot strategies, including minimax-based variants
+- Tkinter interfaces for human-vs-bot and bot-vs-bot matches
+- CLI entry point for running matches without touching internal modules
+- Archived prototypes separated from the production package
+- GitHub Actions workflow for automated validation
 
-## Getting started
+## Project layout
+
+```text
+src/connect4/
+  bots/        Bot strategies
+  ui/          Tkinter interfaces
+  cli.py       Command-line entry point
+  core.py      Board model and game rules
+  match.py     Terminal match runner
+tests/         Regression tests
+scripts/       Thin local launchers
+archive/       Older experiments kept out of the main package
+```
+
+## Installation
 
 ```bash
 python -m venv .venv
@@ -19,34 +33,58 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-## Run the project
+`requirements.txt` installs the package in editable mode together with the development tools used by CI.
+
+## Usage
 
 Play against the main bot:
 
 ```bash
-python scripts/play_gui.py
+connect4 human
 ```
 
-Watch two bots play against each other:
+Watch two bots play in the GUI:
 
 ```bash
-python scripts/watch_bots_gui.py
+connect4 arena
 ```
 
 Run a terminal bot match:
 
 ```bash
-python scripts/play_bot_match.py
+connect4 match --red minimax --yellow kelawin
 ```
 
-Run tests:
+Run the same CLI through Python:
 
 ```bash
-python -m unittest discover -s tests
+python -m connect4 match --quiet
 ```
 
-## Notes before publishing
+Legacy launchers remain available in `scripts/` for convenience after installation.
 
-- The repository is now organized so the public code is separate from archived experiments.
-- IDE files should stay untracked.
-- If you want to make the repository fully open source, adding a `LICENSE` file is the last important missing public-facing step.
+## Development
+
+Run the test suite:
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+Run style checks:
+
+```bash
+pycodestyle --exclude .git,.venv,venv,archive,.idea src scripts tests
+```
+
+Run type checks:
+
+```bash
+pytype src scripts tests
+```
+
+## Publishing notes
+
+- The code intended for public use is isolated from historical experiments.
+- The package is installable and exposes a stable CLI entry point.
+- A repository license is still worth adding, but that choice should be made explicitly by the owner.

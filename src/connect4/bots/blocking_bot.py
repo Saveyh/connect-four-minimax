@@ -1,7 +1,7 @@
 import math
 import random
 
-from connect4.core import Board, Strategy, Token, has_winner, legal_moves, opponent_of
+from connect4.core import Board, Strategy, Token, has_winner, iter_lines, legal_moves, opponent_of, require_legal_moves
 
 WINDOW_LENGTH = 4
 
@@ -13,7 +13,7 @@ class BlockingBot(Strategy):
         return "Project archive adaptation"
 
     def play(self, current_board: Board, your_token: Token) -> int:
-        valid_moves = legal_moves(current_board)
+        valid_moves = require_legal_moves(current_board)
         _, chosen_column = self._minimax(current_board, 4, float("-inf"), float("inf"), True, your_token)
         return chosen_column if chosen_column in valid_moves else random.choice(valid_moves)
 
@@ -70,17 +70,9 @@ class BlockingBot(Strategy):
 
     def _score_position(self, board: Board, token: Token) -> int:
         score = board.column(board.width // 2).count(token) * 3
-        for row in range(board.height):
-            row_values = board.line(row)
-            for column in range(board.width - 3):
-                score += self._score_window(row_values[column:column + WINDOW_LENGTH], token)
-        for column in range(board.width):
-            column_values = board.column(column)
-            for row in range(board.height - 3):
-                score += self._score_window(column_values[row:row + WINDOW_LENGTH], token)
-        for diagonal in board.diagonals():
-            for start in range(len(diagonal) - 3):
-                score += self._score_window(diagonal[start:start + WINDOW_LENGTH], token)
+        for line in iter_lines(board):
+            for start in range(len(line) - WINDOW_LENGTH + 1):
+                score += self._score_window(line[start:start + WINDOW_LENGTH], token)
         return score
 
     def _score_window(self, window: list[Token], token: Token) -> int:

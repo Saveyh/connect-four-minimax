@@ -1,6 +1,6 @@
-import time
+from time import perf_counter
 
-from connect4.core import Board, Strategy, Token, has_winner, legal_moves, opponent_of
+from connect4.core import Board, Strategy, Token, has_winner, iter_lines, legal_moves, opponent_of, require_legal_moves
 
 MAX_TIME_SECONDS = 1.0
 
@@ -12,7 +12,7 @@ class MinimaxBotV2(Strategy):
         return "Matteo"
 
     def play(self, current_board: Board, your_token: Token) -> int:
-        start_time = time.time()
+        start_time = perf_counter()
         opponent_token = opponent_of(your_token)
 
         immediate_win = self._winning_move(current_board, your_token)
@@ -23,9 +23,9 @@ class MinimaxBotV2(Strategy):
         if immediate_block is not None:
             return immediate_block
 
-        best_move = legal_moves(current_board)[0]
+        best_move = self._ordered_moves(current_board)[0]
         depth = 1
-        while time.time() - start_time <= MAX_TIME_SECONDS:
+        while perf_counter() - start_time <= MAX_TIME_SECONDS:
             _, move = self._minimax(
                 current_board,
                 your_token,
@@ -36,18 +36,23 @@ class MinimaxBotV2(Strategy):
                 True,
                 start_time,
             )
-            if time.time() - start_time <= MAX_TIME_SECONDS and move is not None:
+            if perf_counter() - start_time <= MAX_TIME_SECONDS and move is not None:
                 best_move = move
             depth += 1
         return best_move
 
     def _winning_move(self, board: Board, token: Token) -> int | None:
-        for column in legal_moves(board):
+        for column in self._ordered_moves(board):
             candidate = board.copy()
             candidate.play(column, token)
             if has_winner(candidate, token):
                 return column
         return None
+
+    def _ordered_moves(self, board: Board) -> list[int]:
+        moves = require_legal_moves(board)
+        center = board.width // 2
+        return sorted(moves, key=lambda column: abs(column - center))
 
     def _minimax(
         self,
@@ -60,7 +65,11 @@ class MinimaxBotV2(Strategy):
         maximizing: bool,
         start_time: float,
     ) -> tuple[float, int | None]:
-        if depth == 0 or time.time() - start_time > MAX_TIME_SECONDS:
+        if has_winner(board, your_token):
+            return float("inf"), None
+        if has_winner(board, opponent_token):
+            return float("-inf"), None
+        if depth == 0 or perf_counter() - start_time > MAX_TIME_SECONDS:
             return float(self._evaluate(board, your_token)), None
 
         valid_moves = legal_moves(board)
@@ -70,7 +79,7 @@ class MinimaxBotV2(Strategy):
         best_move = valid_moves[0]
         if maximizing:
             value = float("-inf")
-            for column in valid_moves:
+            for column in self._ordered_moves(board):
                 next_board = board.copy()
                 next_board.play(column, your_token)
                 score, _ = self._minimax(
@@ -87,12 +96,12 @@ class MinimaxBotV2(Strategy):
                     value = score
                     best_move = column
                 alpha = max(alpha, value)
-                if beta <= alpha or time.time() - start_time > MAX_TIME_SECONDS:
+                if beta <= alpha or perf_counter() - start_time > MAX_TIME_SECONDS:
                     break
             return value, best_move
 
         value = float("inf")
-        for column in valid_moves:
+        for column in self._ordered_moves(board):
             next_board = board.copy()
             next_board.play(column, opponent_token)
             score, _ = self._minimax(
@@ -109,17 +118,13 @@ class MinimaxBotV2(Strategy):
                 value = score
                 best_move = column
             beta = min(beta, value)
-            if beta <= alpha or time.time() - start_time > MAX_TIME_SECONDS:
+            if beta <= alpha or perf_counter() - start_time > MAX_TIME_SECONDS:
                 break
         return value, best_move
 
     def _evaluate(self, board: Board, token: Token) -> int:
         score = board.column(board.width // 2).count(token) * 6
-        lines = [board.line(index) for index in range(board.height)]
-        lines.extend(board.column(index) for index in range(board.width))
-        lines.extend(board.diagonals())
-
-        for line in lines:
+        for line in iter_lines(board):
             for start in range(len(line) - 3):
                 score += self._score_window(line[start:start + 4], token)
         return score

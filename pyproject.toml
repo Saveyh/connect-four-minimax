@@ -11,6 +11,24 @@ requires-python = ">=3.11"
 authors = [
   { name = "Matteo" },
 ]
+keywords = ["connect-four", "minimax", "python", "tkinter", "game-ai"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Operating System :: OS Independent",
+  "Topic :: Games/Entertainment :: Board Games",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pycodestyle==2.10.0",
+  "pytype==2024.10.11",
+]
+
+[project.scripts]
+connect4 = "connect4.cli:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

@@ -1,8 +1,9 @@
-import time
+from time import perf_counter
 
-from connect4.core import Board, Strategy, Token, legal_moves, opponent_of
+from connect4.core import Board, IllegalMove, Strategy, Token, has_winner, iter_lines, opponent_of, require_legal_moves
 
 MAX_TIME_SECONDS = 1.0
+WINDOW_LENGTH = 4
 
 
 class MinimaxBot(Strategy):
@@ -12,22 +13,35 @@ class MinimaxBot(Strategy):
         return "Matteo"
 
     def play(self, current_board: Board, your_token: Token) -> int:
-        start_time = time.time()
+        start_time = perf_counter()
         opponent_token = opponent_of(your_token)
-        best_move = legal_moves(current_board)[0]
+        best_move = self._ordered_moves(current_board)[0]
+
+        immediate_win = self._winning_move(current_board, your_token)
+        if immediate_win is not None:
+            return immediate_win
+
+        immediate_block = self._winning_move(current_board, opponent_token)
+        if immediate_block is not None:
+            return immediate_block
 
         def is_time_up() -> bool:
-            return time.time() - start_time > MAX_TIME_SECONDS
+            return perf_counter() - start_time > MAX_TIME_SECONDS
 
         def evaluate(board: Board) -> int:
-            return self._count_sequences(board, your_token, 4) - self._count_sequences(board, opponent_token, 4)
+            return self._evaluate(board, your_token, opponent_token)
 
         def minimax(board: Board, depth: int, alpha: float, beta: float, maximizing: bool) -> tuple[float, int]:
+            if has_winner(board, your_token):
+                return float("inf"), -1
+            if has_winner(board, opponent_token):
+                return float("-inf"), -1
             if depth == 0 or is_time_up():
                 return float(evaluate(board)), -1
 
-            valid_moves = legal_moves(board)
-            if not valid_moves:
+            try:
+                valid_moves = self._ordered_moves(board)
+            except IllegalMove:
                 return 0.0, -1
 
             chosen_column = valid_moves[0]
@@ -67,17 +81,34 @@ class MinimaxBot(Strategy):
 
         return best_move
 
-    def _count_sequences(self, board: Board, token: Token, length: int) -> int:
-        score = 0
-        lines = [board.line(index) for index in range(board.height)]
-        lines.extend(board.column(index) for index in range(board.width))
-        lines.extend(board.diagonals())
+    def _winning_move(self, board: Board, token: Token) -> int | None:
+        for column in self._ordered_moves(board):
+            candidate = board.copy()
+            candidate.play(column, token)
+            if has_winner(candidate, token):
+                return column
+        return None
 
-        for line in lines:
-            for start in range(len(line) - length + 1):
-                window = line[start:start + length]
-                if window.count(token) == length and window.count(Token.EMPTY) == 0:
-                    score += 1000
-                elif window.count(token) == length and Token.EMPTY in window:
-                    score += 10 ** length
+    def _ordered_moves(self, board: Board) -> list[int]:
+        moves = require_legal_moves(board)
+        center = board.width // 2
+        return sorted(moves, key=lambda column: abs(column - center))
+
+    def _evaluate(self, board: Board, token: Token, opponent_token: Token) -> int:
+        score = board.column(board.width // 2).count(token) * 4
+        for line in iter_lines(board):
+            for start in range(len(line) - WINDOW_LENGTH + 1):
+                score += self._score_window(line[start:start + WINDOW_LENGTH], token, opponent_token)
+        return score
+
+    def _score_window(self, window: list[Token], token: Token, opponent_token: Token) -> int:
+        score = 0
+        if window.count(token) == WINDOW_LENGTH:
+            score += 10_000
+        elif window.count(token) == WINDOW_LENGTH - 1 and window.count(Token.EMPTY) == 1:
+            score += 120
+        elif window.count(token) == WINDOW_LENGTH - 2 and window.count(Token.EMPTY) == 2:
+            score += 12
+        if window.count(opponent_token) == WINDOW_LENGTH - 1 and window.count(Token.EMPTY) == 1:
+            score -= 100
         return score

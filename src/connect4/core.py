@@ -17,7 +17,16 @@ class IllegalMove(Exception):
 
 
 class Board:
+    """Mutable Connect Four board."""
+
     def __init__(self, height: int = 6, width: int = 7, to_win: int = 4) -> None:
+        if height <= 0 or width <= 0:
+            raise ValueError("Board dimensions must be positive integers.")
+        if to_win < 2:
+            raise ValueError("The win condition must be at least 2.")
+        if to_win > max(height, width):
+            raise ValueError("The win condition cannot exceed the board dimensions.")
+
         self.height = height
         self.width = width
         self.to_win = to_win
@@ -80,6 +89,8 @@ class Strategy(ABC):
 
 
 def opponent_of(token: Token) -> Token:
+    if token == Token.EMPTY:
+        raise ValueError("EMPTY does not have an opponent token.")
     return Token.RED if token == Token.YELLOW else Token.YELLOW
 
 
@@ -87,8 +98,23 @@ def legal_moves(board: Board) -> list[int]:
     return [column for column in range(board.width) if Token.EMPTY in board.column(column)]
 
 
+def require_legal_moves(board: Board) -> list[int]:
+    moves = legal_moves(board)
+    if not moves:
+        raise IllegalMove("No legal moves are available on this board.")
+    return moves
+
+
 def board_full(board: Board) -> bool:
     return not legal_moves(board)
+
+
+def iter_lines(board: Board) -> Iterable[list[Token]]:
+    for row in range(board.height):
+        yield board.line(row)
+    for column in range(board.width):
+        yield board.column(column)
+    yield from board.diagonals()
 
 
 def has_winner(board: Board, token: Token) -> bool:
@@ -103,13 +129,7 @@ def has_winner(board: Board, token: Token) -> bool:
                 count = 0
         return False
 
-    for row in range(board.height):
-        if has_consecutive(board.line(row)):
-            return True
-    for column in range(board.width):
-        if has_consecutive(board.column(column)):
-            return True
-    for diagonal in board.diagonals():
-        if has_consecutive(diagonal):
+    for line in iter_lines(board):
+        if has_consecutive(line):
             return True
     return False

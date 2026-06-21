@@ -1,4 +1,4 @@
-from connect4.core import Board, Strategy, Token, has_winner, legal_moves, opponent_of
+from connect4.core import Board, Strategy, Token, has_winner, legal_moves, opponent_of, require_legal_moves
 
 
 class KelawinBot(Strategy):
@@ -8,17 +8,26 @@ class KelawinBot(Strategy):
         return "Kay and Matteo"
 
     def play(self, current_board: Board, your_token: Token) -> int:
+        moves = self._ordered_moves(current_board)
         opponent_token = opponent_of(your_token)
 
-        for column in legal_moves(current_board):
+        for column in moves:
             if self._winning_move(current_board, your_token, column):
                 return column
 
-        for column in legal_moves(current_board):
+        for column in moves:
             if self._winning_move(current_board, opponent_token, column):
                 return column
 
-        best_column, _ = self._minimax(current_board, your_token, opponent_token, depth=6, alpha=float("-inf"), beta=float("inf"), maximizing=True)
+        best_column, _ = self._minimax(
+            current_board,
+            your_token,
+            opponent_token,
+            depth=6,
+            alpha=float("-inf"),
+            beta=float("inf"),
+            maximizing=True,
+        )
         return best_column
 
     def _winning_move(self, board: Board, token: Token, column: int) -> bool:
@@ -57,6 +66,11 @@ class KelawinBot(Strategy):
 
         return score
 
+    def _ordered_moves(self, board: Board) -> list[int]:
+        moves = require_legal_moves(board)
+        center = board.width // 2
+        return sorted(moves, key=lambda column: abs(column - center))
+
     def _score_group(self, group: list[Token], token: Token, opponent_token: Token) -> int:
         token_count = group.count(token)
         opponent_count = group.count(opponent_token)
@@ -85,15 +99,19 @@ class KelawinBot(Strategy):
         beta: float,
         maximizing: bool,
     ) -> tuple[int, float]:
+        if has_winner(board, token):
+            return -1, float("inf")
+        if has_winner(board, opponent_token):
+            return -1, float("-inf")
+
         moves = legal_moves(board)
-        if depth == 0 or not moves or has_winner(board, token) or has_winner(board, opponent_token):
-            score = self._score_position(board, token, opponent_token)
-            return -1, float(score)
+        if depth == 0 or not moves:
+            return -1, float(self._score_position(board, token, opponent_token))
 
         best_column = moves[0]
         if maximizing:
             best_score = float("-inf")
-            for column in moves:
+            for column in self._ordered_moves(board):
                 next_board = board.copy()
                 next_board.play(column, token)
                 _, score = self._minimax(next_board, token, opponent_token, depth - 1, alpha, beta, False)
@@ -106,7 +124,7 @@ class KelawinBot(Strategy):
             return best_column, best_score
 
         best_score = float("inf")
-        for column in moves:
+        for column in self._ordered_moves(board):
             next_board = board.copy()
             next_board.play(column, opponent_token)
             _, score = self._minimax(next_board, token, opponent_token, depth - 1, alpha, beta, True)

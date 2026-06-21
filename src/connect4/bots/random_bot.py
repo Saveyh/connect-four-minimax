@@ -1,6 +1,6 @@
 import secrets
 
-from connect4.core import Board, Strategy, Token, legal_moves
+from connect4.core import Board, Strategy, Token, require_legal_moves
 
 
 class RandomBot(Strategy):
@@ -11,4 +11,4 @@ class RandomBot(Strategy):
 
     def play(self, current_board: Board, your_token: Token) -> int:
         del your_token
-        return secrets.choice(legal_moves(current_board))
+        return secrets.choice(require_legal_moves(current_board))

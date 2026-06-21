@@ -1,7 +1,7 @@
 import tkinter as tk
 
 from connect4.bots.kelawin_bot import KelawinBot
-from connect4.core import Board, IllegalMove, Token, has_winner
+from connect4.core import Board, IllegalMove, Token, board_full, has_winner
 
 CELL_SIZE = 80
 PADDING = 10
@@ -20,6 +20,7 @@ class Connect4GUI:
         self.token_player = Token.RED
         self.token_bot = Token.YELLOW
         self.bot = KelawinBot()
+        self.accepting_input = True
         self.draw_board()
 
     def draw_board(self) -> None:
@@ -39,15 +40,22 @@ class Connect4GUI:
                 self.canvas.create_oval(x0, y0, x1, y1, fill=color)
 
     def click_handler(self, event: tk.Event) -> None:
+        if not self.accepting_input:
+            return
+
         column = event.x // CELL_SIZE
         try:
             self.board.play(column, self.token_player)
         except IllegalMove:
             return
 
+        self.accepting_input = False
         self.draw_board()
         if has_winner(self.board, self.token_player):
             self.end_game("You win!")
+            return
+        if board_full(self.board):
+            self.end_game("Draw game.")
             return
         self.root.after(500, self.bot_move)
 
@@ -58,10 +66,16 @@ class Connect4GUI:
             self.draw_board()
             if has_winner(self.board, self.token_bot):
                 self.end_game("The bot wins!")
+                return
+            if board_full(self.board):
+                self.end_game("Draw game.")
+                return
+            self.accepting_input = True
         except IllegalMove:
             self.end_game("Draw game.")
 
     def end_game(self, message: str) -> None:
+        self.accepting_input = False
         self.canvas.unbind("<Button-1>")
         self.canvas.create_text(
             self.canvas.winfo_width() // 2,

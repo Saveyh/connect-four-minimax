@@ -1,2 +1,1 @@
-pycodestyle==2.10.0
-pytype==2024.10.11
+-e .[dev]
