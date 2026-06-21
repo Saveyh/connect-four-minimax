@@ -86,9 +86,3 @@ Run type checks:
 ```bash
 pytype src scripts tests
 ```
-
-## Publishing notes
-
-- The code intended for public use is isolated from historical experiments.
-- The package is installable and exposes a stable CLI entry point.
-- A repository license is still worth adding, but that choice should be made explicitly by the owner.
